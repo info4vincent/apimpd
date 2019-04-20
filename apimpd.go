@@ -41,6 +41,32 @@ func StopMusic(host string) {
 	conn.Stop()
 }
 
+func StatusMusic(host string) string {
+	// Connect to MPD server
+	conn, err := mpd.Dial("tcp", host+":6600")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer conn.Close()
+
+	status, err := conn.Status()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	song, err := conn.CurrentSong()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	line := "some error..."
+	if status["state"] == "play" {
+		line = fmt.Sprintf("%s - %s", song["Artist"], song["Title"])
+	} else {
+		line = fmt.Sprintf("State: %s", status["state"])
+	}
+	fmt.Println(line)
+	return line
+}
+
 func main() {
 	mpdClientPtr := flag.String("mpd-client", "localhost", "Which mpd client to use?")
 	flag.Parse()
@@ -58,6 +84,12 @@ func main() {
 			"message": "stop",
 		})
 		StopMusic(*mpdClientPtr)
+	})
+	r.GET("/status", func(c *gin.Context) {
+		currentStatus := StatusMusic(*mpdClientPtr)
+		c.JSON(200, gin.H{
+			"message": currentStatus,
+		})
 	})
 	r.Run() // listen and serve on 0.0.0.0:8080
 }
