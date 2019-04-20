@@ -55,7 +55,7 @@ func main() {
 	})
 	r.GET("/stop", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "play started",
+			"message": "stop",
 		})
 		StopMusic(*mpdClientPtr)
 	})
